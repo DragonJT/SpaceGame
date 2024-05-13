@@ -127,7 +127,7 @@ function Fire(o){
             type:'bullet', 
             velocity:{x:o.velocity.x + Math.cos(rads)*20, y:o.velocity.y + Math.sin(rads)*20}, 
             position:{x:o.position.x, y:o.position.y}, 
-            color:{r:1,g:0,b:0}, 
+            color:'rgb(255,0,0)', 
             timeLeft:35});
     }
     o.timeUntilShootAgain--;
@@ -147,6 +147,25 @@ function Accelerate(o){
 function Draw(){
     ctx.fillStyle = 'black';
     ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
+
+    for(var s of stars){
+        ctx.fillStyle = s.color;
+        s.x+=s.velocityX-player.velocity.x;
+        s.y+=s.velocityY-player.velocity.y;
+        ctx.fillRect(s.x-s.radius/2, s.y-s.radius/2, s.radius, s.radius);
+        while(s.x<0){
+            s.x+=ctx.canvas.width;
+        }
+        while(s.y<0){
+            s.y+=ctx.canvas.height;
+        }
+        while(s.x>ctx.canvas.width){
+            s.x-=ctx.canvas.width;
+        }
+        while(s.y>ctx.canvas.height){
+            s.y-=ctx.canvas.height;
+        }
+    }
 
     for(var i=0;i<objects.length;i++){
         var o = objects[i];
@@ -189,7 +208,7 @@ function Draw(){
 
         var x = o.position.x-player.position.x+ctx.canvas.width*0.5;
         var y = o.position.y-player.position.y+ctx.canvas.height*0.5;
-        var color = 'rgb('+o.color.r*255+','+o.color.g*255+','+o.color.b*255+')';
+        var color = o.color;
         if(o.type == 'planet'){
             DrawCircle(x,y,o.radius,color);
         }
@@ -232,7 +251,7 @@ function CreateCanvas(parent){
 }
 
 function RandColor(){
-    return {r:Math.random(), g:Math.random(), b:Math.random()};
+    return 'rgb('+Math.random()*255+','+Math.random()*255+','+Math.random()*255+')';
 }
 
 var player = {
@@ -242,14 +261,32 @@ var player = {
     position:{x:0,y:0}, 
     velocity:{x:0,y:0}, 
     acceleration:0.05, 
-    color:{r:0,g:0,b:1}, 
+    color:'rgb(0,0,255)', 
     timeUntilShootAgain:0, 
     controller:'Player',
     topSpeed:5};
 var objects = [];
+var stars = [];
 var radius = 2000;
+var ctx = CreateCanvas(document.body);
+
+function CalcVelocity(maxVelocity){
+    var r = Math.random();
+    return r*r*r*maxVelocity;
+}
+
+function CalcStarColor(){
+    function GetColor(){
+        var r = Math.random();
+        return 1-(r*r*r*r);
+    }
+    return 'rgb('+GetColor()*255+','+GetColor()*255+','+GetColor()*255+')';
+}
 for(var i=0;i<10;i++){
     objects.push({type:'planet', position:{x:Math.random()*radius-radius*0.5, y:Math.random()*radius-radius*0.5}, color:RandColor(), radius:Math.random()*100});
+}
+for(var i=0;i<1000;i++){
+    stars.push({x:Math.random()*ctx.canvas.width, y:Math.random()*ctx.canvas.height, velocityX:CalcVelocity(3), velocityY:CalcVelocity(3), radius:Math.random()*3, color:CalcStarColor()});
 }
 objects.push({
     type:'ship', 
@@ -258,7 +295,7 @@ objects.push({
     position:{x:20, y:20}, 
     velocity:{x:0,y:0}, 
     acceleration:0.05, 
-    color:{r:1,g:1,b:0}, 
+    color:'rgb(255,255,0)', 
     timeUntilShootAgain:0, 
     controller:'AI', 
     target:player,
@@ -266,7 +303,6 @@ objects.push({
 objects.push(player);
 
 var keys = {};
-var ctx = CreateCanvas(document.body);
 document.body.style.margin = '0px';
 document.body.style.overflow = 'hidden';
 
